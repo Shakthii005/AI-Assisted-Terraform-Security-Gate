@@ -1,0 +1,22 @@
+# Python
+.venv/
+venv/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+
+# Terraform
+.terraform/
+**/.terraform/
+*.tfstate
+*.tfstate.*
+*.tfstate.backup
+
+# Sensitive variables
+*.tfvars
+*.tfvars.json
+.env
+.env.*
+
+# IDE
+.vscode/
