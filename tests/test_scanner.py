@@ -204,3 +204,34 @@ def test_all_real_baseline_findings_have_resource():
     assert all(
         finding.resource for finding in findings
     )
+
+import pytest
+
+from pathlib import Path
+from gate.scanner import Finding
+from gate.extract import resolve_finding_path
+
+
+def test_path_traversal_is_blocked():
+    """The extractor must reject paths outside infra/."""
+
+    malicious_finding = Finding(
+        check_id="TEST",
+        check_name="Path traversal test",
+        file_path=r"..\..\outside.tf",
+        resource="aws_instance.test",
+        line_start=1,
+        line_end=5,
+        guideline="",
+        severity="HIGH",
+        severity_source="test",
+    )
+
+    with pytest.raises(
+        ValueError,
+        match="escapes the infrastructure directory"
+    ):
+        resolve_finding_path(
+            malicious_finding,
+            Path("infra")
+        )

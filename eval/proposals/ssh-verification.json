@@ -1,0 +1,432 @@
+﻿{
+    "check_type": "terraform",
+    "results": {
+        "passed_checks": [
+            {
+                "check_id": "CKV_AWS_24",
+                "bc_check_id": "BC_AWS_NETWORKING_1",
+                "check_name": "Ensure no security groups allow ingress from 0.0.0.0:0 to port 22",
+                "check_result": {
+                    "result": "PASSED",
+                    "evaluated_keys": []
+                },
+                "code_block": [
+                    [
+                        62,
+                        "resource \"aws_security_group\" \"database\" {\n"
+                    ],
+                    [
+                        63,
+                        "  name        = \"company-database-sg\"\n"
+                    ],
+                    [
+                        64,
+                        "  description = \"Database access from internal network\"\n"
+                    ],
+                    [
+                        65,
+                        "  vpc_id      = aws_vpc.company.id\n"
+                    ],
+                    [
+                        66,
+                        "\n"
+                    ],
+                    [
+                        67,
+                        "  ingress {\n"
+                    ],
+                    [
+                        68,
+                        "    from_port   = 3306\n"
+                    ],
+                    [
+                        69,
+                        "    to_port     = 3306\n"
+                    ],
+                    [
+                        70,
+                        "    protocol    = \"tcp\"\n"
+                    ],
+                    [
+                        71,
+                        "    cidr_blocks = [\"10.0.0.0/16\"]\n"
+                    ],
+                    [
+                        72,
+                        "  }\n"
+                    ],
+                    [
+                        73,
+                        "\n"
+                    ],
+                    [
+                        74,
+                        "  egress {\n"
+                    ],
+                    [
+                        75,
+                        "    from_port   = 0\n"
+                    ],
+                    [
+                        76,
+                        "    to_port     = 0\n"
+                    ],
+                    [
+                        77,
+                        "    protocol    = \"-1\"\n"
+                    ],
+                    [
+                        78,
+                        "    cidr_blocks = [\"0.0.0.0/0\"]\n"
+                    ],
+                    [
+                        79,
+                        "  }\n"
+                    ],
+                    [
+                        80,
+                        "}\n"
+                    ]
+                ],
+                "file_path": "\\day2_compute_database.tf",
+                "file_abs_path": "D:\\LEARNING\\AI-Assisted Terraform Security Gate\\eval\\work\\ssh_open_trial\\infra\\day2_compute_database.tf",
+                "repo_file_path": "/eval/work/ssh_open_trial/infra/day2_compute_database.tf",
+                "file_line_range": [
+                    62,
+                    80
+                ],
+                "resource": "aws_security_group.database",
+                "evaluations": null,
+                "check_class": "checkov.terraform.checks.resource.aws.SecurityGroupUnrestrictedIngress22",
+                "fixed_definition": null,
+                "entity_tags": null,
+                "caller_file_path": null,
+                "caller_file_line_range": null,
+                "resource_address": null,
+                "severity": null,
+                "bc_category": null,
+                "benchmarks": null,
+                "description": null,
+                "short_description": null,
+                "vulnerability_details": null,
+                "connected_node": null,
+                "guideline": "https://docs.prismacloud.io/en/enterprise-edition/policy-reference/aws-policies/aws-networking-policies/networking-1-port-security",
+                "details": [],
+                "check_len": null,
+                "definition_context_file_path": "D:\\LEARNING\\AI-Assisted Terraform Security Gate\\eval\\work\\ssh_open_trial\\infra\\day2_compute_database.tf"
+            },
+            {
+                "check_id": "CKV_AWS_24",
+                "bc_check_id": "BC_AWS_NETWORKING_1",
+                "check_name": "Ensure no security groups allow ingress from 0.0.0.0:0 to port 22",
+                "check_result": {
+                    "result": "PASSED",
+                    "evaluated_keys": [
+                        "from_port",
+                        "to_port",
+                        "cidr_ipv4",
+                        "cidr_ipv6"
+                    ]
+                },
+                "code_block": [
+                    [
+                        76,
+                        "resource \"aws_security_group\" \"ssh_open\" {\n"
+                    ],
+                    [
+                        77,
+                        "  name        = \"company-ssh-open\"\n"
+                    ],
+                    [
+                        78,
+                        "  description = \"SSH inbound access disabled\"\n"
+                    ],
+                    [
+                        79,
+                        "  vpc_id      = aws_vpc.company.id\n"
+                    ],
+                    [
+                        80,
+                        "\n"
+                    ],
+                    [
+                        81,
+                        "  tags = {\n"
+                    ],
+                    [
+                        82,
+                        "    Name = \"Company-SSH-Open\"\n"
+                    ],
+                    [
+                        83,
+                        "  }\n"
+                    ],
+                    [
+                        84,
+                        "}\n"
+                    ]
+                ],
+                "file_path": "\\day2_s3_network.tf",
+                "file_abs_path": "D:\\LEARNING\\AI-Assisted Terraform Security Gate\\eval\\work\\ssh_open_trial\\infra\\day2_s3_network.tf",
+                "repo_file_path": "/eval/work/ssh_open_trial/infra/day2_s3_network.tf",
+                "file_line_range": [
+                    76,
+                    84
+                ],
+                "resource": "aws_security_group.ssh_open",
+                "evaluations": null,
+                "check_class": "checkov.terraform.checks.resource.aws.SecurityGroupUnrestrictedIngress22",
+                "fixed_definition": null,
+                "entity_tags": {
+                    "Name": "Company-SSH-Open"
+                },
+                "caller_file_path": null,
+                "caller_file_line_range": null,
+                "resource_address": null,
+                "severity": null,
+                "bc_category": null,
+                "benchmarks": null,
+                "description": null,
+                "short_description": null,
+                "vulnerability_details": null,
+                "connected_node": null,
+                "guideline": "https://docs.prismacloud.io/en/enterprise-edition/policy-reference/aws-policies/aws-networking-policies/networking-1-port-security",
+                "details": [],
+                "check_len": null,
+                "definition_context_file_path": "D:\\LEARNING\\AI-Assisted Terraform Security Gate\\eval\\work\\ssh_open_trial\\infra\\day2_s3_network.tf"
+            },
+            {
+                "check_id": "CKV_AWS_24",
+                "bc_check_id": "BC_AWS_NETWORKING_1",
+                "check_name": "Ensure no security groups allow ingress from 0.0.0.0:0 to port 22",
+                "check_result": {
+                    "result": "PASSED",
+                    "evaluated_keys": []
+                },
+                "code_block": [
+                    [
+                        87,
+                        "resource \"aws_security_group\" \"rdp_open\" {\n"
+                    ],
+                    [
+                        88,
+                        "  name        = \"company-rdp-open\"\n"
+                    ],
+                    [
+                        89,
+                        "  description = \"Intentionally vulnerable RDP rule\"\n"
+                    ],
+                    [
+                        90,
+                        "  vpc_id      = aws_vpc.company.id\n"
+                    ],
+                    [
+                        91,
+                        "\n"
+                    ],
+                    [
+                        92,
+                        "  ingress {\n"
+                    ],
+                    [
+                        93,
+                        "    description = \"RDP open to the world\"\n"
+                    ],
+                    [
+                        94,
+                        "    from_port   = 3389\n"
+                    ],
+                    [
+                        95,
+                        "    to_port     = 3389\n"
+                    ],
+                    [
+                        96,
+                        "    protocol    = \"tcp\"\n"
+                    ],
+                    [
+                        97,
+                        "    cidr_blocks = [\"0.0.0.0/0\"]\n"
+                    ],
+                    [
+                        98,
+                        "  }\n"
+                    ],
+                    [
+                        99,
+                        "\n"
+                    ],
+                    [
+                        100,
+                        "  tags = {\n"
+                    ],
+                    [
+                        101,
+                        "    Name = \"Company-RDP-Open\"\n"
+                    ],
+                    [
+                        102,
+                        "  }\n"
+                    ],
+                    [
+                        103,
+                        "}\n"
+                    ]
+                ],
+                "file_path": "\\day2_s3_network.tf",
+                "file_abs_path": "D:\\LEARNING\\AI-Assisted Terraform Security Gate\\eval\\work\\ssh_open_trial\\infra\\day2_s3_network.tf",
+                "repo_file_path": "/eval/work/ssh_open_trial/infra/day2_s3_network.tf",
+                "file_line_range": [
+                    87,
+                    103
+                ],
+                "resource": "aws_security_group.rdp_open",
+                "evaluations": null,
+                "check_class": "checkov.terraform.checks.resource.aws.SecurityGroupUnrestrictedIngress22",
+                "fixed_definition": null,
+                "entity_tags": {
+                    "Name": "Company-RDP-Open"
+                },
+                "caller_file_path": null,
+                "caller_file_line_range": null,
+                "resource_address": null,
+                "severity": null,
+                "bc_category": null,
+                "benchmarks": null,
+                "description": null,
+                "short_description": null,
+                "vulnerability_details": null,
+                "connected_node": null,
+                "guideline": "https://docs.prismacloud.io/en/enterprise-edition/policy-reference/aws-policies/aws-networking-policies/networking-1-port-security",
+                "details": [],
+                "check_len": null,
+                "definition_context_file_path": "D:\\LEARNING\\AI-Assisted Terraform Security Gate\\eval\\work\\ssh_open_trial\\infra\\day2_s3_network.tf"
+            }
+        ],
+        "failed_checks": [
+            {
+                "check_id": "CKV_AWS_24",
+                "bc_check_id": "BC_AWS_NETWORKING_1",
+                "check_name": "Ensure no security groups allow ingress from 0.0.0.0:0 to port 22",
+                "check_result": {
+                    "result": "FAILED",
+                    "evaluated_keys": [
+                        "ingress/[0]/from_port",
+                        "ingress/[0]/to_port",
+                        "ingress/[0]/cidr_blocks",
+                        "ingress/[0]/ipv6_cidr_blocks"
+                    ]
+                },
+                "code_block": [
+                    [
+                        106,
+                        "resource \"aws_security_group\" \"all_ports_open\" {\n"
+                    ],
+                    [
+                        107,
+                        "  name        = \"company-all-ports-open\"\n"
+                    ],
+                    [
+                        108,
+                        "  description = \"Intentionally vulnerable unrestricted ingress\"\n"
+                    ],
+                    [
+                        109,
+                        "  vpc_id      = aws_vpc.company.id\n"
+                    ],
+                    [
+                        110,
+                        "\n"
+                    ],
+                    [
+                        111,
+                        "  ingress {\n"
+                    ],
+                    [
+                        112,
+                        "    description = \"All protocols open to the world\"\n"
+                    ],
+                    [
+                        113,
+                        "    from_port   = 0\n"
+                    ],
+                    [
+                        114,
+                        "    to_port     = 0\n"
+                    ],
+                    [
+                        115,
+                        "    protocol    = \"-1\"\n"
+                    ],
+                    [
+                        116,
+                        "    cidr_blocks = [\"0.0.0.0/0\"]\n"
+                    ],
+                    [
+                        117,
+                        "  }\n"
+                    ],
+                    [
+                        118,
+                        "\n"
+                    ],
+                    [
+                        119,
+                        "  tags = {\n"
+                    ],
+                    [
+                        120,
+                        "    Name = \"Company-All-Ports-Open\"\n"
+                    ],
+                    [
+                        121,
+                        "  }\n"
+                    ],
+                    [
+                        122,
+                        "}\n"
+                    ]
+                ],
+                "file_path": "\\day2_s3_network.tf",
+                "file_abs_path": "D:\\LEARNING\\AI-Assisted Terraform Security Gate\\eval\\work\\ssh_open_trial\\infra\\day2_s3_network.tf",
+                "repo_file_path": "/eval/work/ssh_open_trial/infra/day2_s3_network.tf",
+                "file_line_range": [
+                    106,
+                    122
+                ],
+                "resource": "aws_security_group.all_ports_open",
+                "evaluations": null,
+                "check_class": "checkov.terraform.checks.resource.aws.SecurityGroupUnrestrictedIngress22",
+                "fixed_definition": null,
+                "entity_tags": {
+                    "Name": "Company-All-Ports-Open"
+                },
+                "caller_file_path": null,
+                "caller_file_line_range": null,
+                "resource_address": null,
+                "severity": null,
+                "bc_category": null,
+                "benchmarks": null,
+                "description": null,
+                "short_description": null,
+                "vulnerability_details": null,
+                "connected_node": null,
+                "guideline": "https://docs.prismacloud.io/en/enterprise-edition/policy-reference/aws-policies/aws-networking-policies/networking-1-port-security",
+                "details": [],
+                "check_len": null,
+                "definition_context_file_path": "D:\\LEARNING\\AI-Assisted Terraform Security Gate\\eval\\work\\ssh_open_trial\\infra\\day2_s3_network.tf"
+            }
+        ],
+        "skipped_checks": [],
+        "parsing_errors": []
+    },
+    "summary": {
+        "passed": 3,
+        "failed": 1,
+        "skipped": 0,
+        "parsing_errors": 0,
+        "resource_count": 22,
+        "checkov_version": "3.4.0"
+    },
+    "url": "Add an api key '--bc-api-key <api-key>' to see more detailed insights via https://bridgecrew.cloud"
+}

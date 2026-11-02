@@ -1,0 +1,13 @@
+{
+  "check_id": "CKV_AWS_24",
+  "resource": "aws_security_group.ssh_open",
+  "original_file": "\\day2_s3_network.tf",
+  "original_line_start": 76,
+  "original_line_end": 92,
+  "status": "PROPOSED_NOT_VERIFIED",
+  "proposal": {
+    "patched_block": "resource \"aws_security_group\" \"ssh_open\" {\n  name        = \"company-ssh-open\"\n  description = \"SSH inbound access disabled\"\n  vpc_id      = aws_vpc.company.id\n\n  tags = {\n    Name = \"Company-SSH-Open\"\n  }\n}",
+    "additional_blocks": [],
+    "explanation": "Removed the unrestricted SSH ingress rule and updated the security group description to indicate inbound SSH is disabled. This eliminates public SSH access while preserving the security group name, VPC association, and tags."
+  }
+}

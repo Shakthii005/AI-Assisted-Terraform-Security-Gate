@@ -1,0 +1,15 @@
+{
+  "check_id": "CKV_AWS_145",
+  "resource": "aws_s3_bucket.company_data",
+  "original_file": "\\day2_s3_network.tf",
+  "original_line_start": 9,
+  "original_line_end": 16,
+  "status": "PROPOSED_NOT_VERIFIED",
+  "proposal": {
+    "patched_block": "resource \"aws_s3_bucket\" \"company_data\" {\n  bucket = \"ai-assisted-tf-gate-company-data-day2-demo-2026\"\n\n  tags = {\n    Name        = \"Company-Data-Bucket\"\n    Environment = \"Learning\"\n  }\n}",
+    "additional_blocks": [
+      "resource \"aws_s3_bucket_server_side_encryption_configuration\" \"company_data\" {\n  bucket = aws_s3_bucket.company_data.id\n\n  rule {\n    apply_server_side_encryption_by_default {\n      sse_algorithm = \"aws:kms\"\n    }\n  }\n}"
+    ],
+    "explanation": "Added an aws_s3_bucket_server_side_encryption_configuration resource that references the existing bucket and enables default server\u2011side encryption using the AWS\u2011managed KMS key. This satisfies CKV_AWS_145 without altering the original bucket definition or introducing any new keys."
+  }
+}

@@ -1,0 +1,13 @@
+{
+  "check_id": "CKV_AWS_62",
+  "resource": "aws_iam_policy.wildcard_admin",
+  "original_file": "\\day2_identity_audit.tf",
+  "original_line_start": 14,
+  "original_line_end": 28,
+  "status": "PROPOSED_NOT_VERIFIED",
+  "proposal": {
+    "patched_block": "resource \"aws_iam_policy\" \"wildcard_admin\" {\n  name        = \"Company-Wildcard-Policy\"\n  description = \"Intentionally excessive permissions\"\n\n  policy = jsonencode({\n    Version = \"2012-10-17\"\n    Statement = [\n      {\n        Effect   = \"Allow\"\n        Action   = [\"s3:GetObject\"]\n        Resource = \"arn:aws:s3:::company-internal-data/*\"\n      }\n    ]\n  })\n}",
+    "additional_blocks": [],
+    "explanation": "Replaced the overly permissive wildcard Action \"*\" and Resource \"*\" with a least\u2011privilege statement that only allows the s3:GetObject action on the specific S3 bucket ARN pattern. This satisfies the requirement to keep the same resource name, description, and Terraform identity while eliminating full administrative rights."
+  }
+}

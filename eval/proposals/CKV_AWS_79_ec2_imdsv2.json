@@ -1,0 +1,13 @@
+{
+  "check_id": "CKV_AWS_79",
+  "resource": "aws_instance.company_app",
+  "original_file": "\\day2_compute_database.tf",
+  "original_line_start": 9,
+  "original_line_end": 31,
+  "status": "PROPOSED_NOT_VERIFIED",
+  "proposal": {
+    "patched_block": "resource \"aws_instance\" \"company_app\" {\n  ami                         = \"ami-0c1ac8a41498c1a9c\"\n  instance_type               = \"t3.micro\"\n  subnet_id                   = aws_subnet.app_a.id\n  vpc_security_group_ids      = [aws_security_group.ssh_open.id]\n  associate_public_ip_address = true\n\n  metadata_options {\n    http_tokens = \"required\"\n  }\n\n  root_block_device {\n    volume_size = 8\n    volume_type = \"gp3\"\n    encrypted   = false\n  }\n\n  tags = {\n    Name = \"Company-App-Server\"\n  }\n}",
+    "additional_blocks": [],
+    "explanation": "The metadata_options block now sets http_tokens = \"required\", which forces the use of IMDSv2 and disables IMDSv1. This addresses Checkov rule CKV_AWS_79 without altering any other instance configuration, preserving the existing AMI, instance type, networking, storage, and tags."
+  }
+}

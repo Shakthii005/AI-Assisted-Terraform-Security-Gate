@@ -1,0 +1,13 @@
+{
+  "check_id": "CKV_AWS_17",
+  "resource": "aws_db_instance.company",
+  "original_file": "\\day2_compute_database.tf",
+  "original_line_start": 82,
+  "original_line_end": 111,
+  "status": "PROPOSED_NOT_VERIFIED",
+  "proposal": {
+    "patched_block": "resource \"aws_db_instance\" \"company\" {\n  identifier        = \"company-database-day2\"\n  engine            = \"mysql\"\n  engine_version    = \"8.0\"\n  instance_class    = \"db.t3.micro\"\n  allocated_storage = 20\n\n  username = \"companyadmin\"\n  password = \"__TFG_REDACTED_PASSWORD_0__\"\n\n  db_subnet_group_name   = aws_db_subnet_group.company.name\n  vpc_security_group_ids = [aws_security_group.database.id]\n\n  # VULNERABILITY 14: Database is publicly accessible\n  publicly_accessible = false\n\n  # VULNERABILITY 15: Database storage is not encrypted\n  storage_encrypted = false\n\n  # VULNERABILITY 16: No backup retention\n  backup_retention_period = 0\n\n  # VULNERABILITY 17: No deletion protection\n  deletion_protection = false\n\n  skip_final_snapshot = true\n  tags = {\n    Name = \"Company-Production-Database\"\n  }\n}",
+    "additional_blocks": [],
+    "explanation": "Set publicly_accessible to false to ensure the RDS instance is not reachable from the public internet while preserving all other configuration, including the redacted password placeholder."
+  }
+}
