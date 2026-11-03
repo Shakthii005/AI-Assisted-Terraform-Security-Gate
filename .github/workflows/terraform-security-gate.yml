@@ -16,6 +16,7 @@ on:
       - 'requirements*.txt'
       - '.github/workflows/**'
       - 'eval/baseline.json'
+# Verify automated CI execution on pull requests.
 
   pull_request:
     branches:
