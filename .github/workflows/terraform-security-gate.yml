@@ -1,9 +1,6 @@
 
-name: Terraform Security Gate
 
-# ==========================================================
-# WHEN SHOULD THE PIPELINE RUN?
-# ==========================================================
+name: Terraform Security Gate
 
 on:
   push:
@@ -16,18 +13,13 @@ on:
       - 'requirements*.txt'
       - '.github/workflows/**'
       - 'eval/baseline.json'
-# Verify automated CI execution on pull requests.
 
   pull_request:
     branches:
       - main
-    paths:
-      - 'infra/**'
-      - 'gate/**'
-      - 'tests/**'
-      - 'requirements*.txt'
-      - '.github/workflows/**'
-      - 'eval/baseline.json'
+
+  workflow_dispatch:
+
 
   workflow_dispatch:
 
