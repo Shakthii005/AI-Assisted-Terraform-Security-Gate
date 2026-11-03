@@ -1,0 +1,128 @@
+{
+  "project": "AI-Assisted Terraform Security Gate",
+  "timestamp_utc": "2026-11-03T06:54:32.893738+00:00",
+  "check_id": "CKV_AWS_62",
+  "resource": "aws_iam_policy.wildcard_admin",
+  "workspace": "D:\\LEARNING\\AI-Assisted Terraform Security Gate\\eval\\work\\iam_least_privilege_trial",
+  "proposal_path": "D:\\LEARNING\\AI-Assisted Terraform Security Gate\\eval\\proposals\\CKV_AWS_62_iam_least_privilege.json",
+  "status": "ACCEPTED_FOR_HUMAN_REVIEW",
+  "checks": {
+    "terraform_format": true,
+    "terraform_init": true,
+    "terraform_validate": true,
+    "checkov_scan_complete": true,
+    "target_finding_resolved": true,
+    "no_new_checkov_findings": true,
+    "terraform_file_scope": true,
+    "terraform_resource_scope": true,
+    "terraform_change_scope": true
+  },
+  "baseline": {
+    "failed_findings": 66,
+    "unique_finding_keys": 66
+  },
+  "patched": {
+    "failed_findings": 57,
+    "unique_finding_keys": 57
+  },
+  "resolved_findings": [
+    {
+      "check_id": "CKV2_AWS_40",
+      "resource": "aws_iam_policy.wildcard_admin",
+      "file_path": "day2_identity_audit.tf"
+    },
+    {
+      "check_id": "CKV_AWS_286",
+      "resource": "aws_iam_policy.wildcard_admin",
+      "file_path": "day2_identity_audit.tf"
+    },
+    {
+      "check_id": "CKV_AWS_287",
+      "resource": "aws_iam_policy.wildcard_admin",
+      "file_path": "day2_identity_audit.tf"
+    },
+    {
+      "check_id": "CKV_AWS_288",
+      "resource": "aws_iam_policy.wildcard_admin",
+      "file_path": "day2_identity_audit.tf"
+    },
+    {
+      "check_id": "CKV_AWS_289",
+      "resource": "aws_iam_policy.wildcard_admin",
+      "file_path": "day2_identity_audit.tf"
+    },
+    {
+      "check_id": "CKV_AWS_290",
+      "resource": "aws_iam_policy.wildcard_admin",
+      "file_path": "day2_identity_audit.tf"
+    },
+    {
+      "check_id": "CKV_AWS_355",
+      "resource": "aws_iam_policy.wildcard_admin",
+      "file_path": "day2_identity_audit.tf"
+    },
+    {
+      "check_id": "CKV_AWS_62",
+      "resource": "aws_iam_policy.wildcard_admin",
+      "file_path": "day2_identity_audit.tf"
+    },
+    {
+      "check_id": "CKV_AWS_63",
+      "resource": "aws_iam_policy.wildcard_admin",
+      "file_path": "day2_identity_audit.tf"
+    }
+  ],
+  "new_findings": [],
+  "target_finding_resolved": true,
+  "changed_terraform_files": [
+    "day2_identity_audit.tf"
+  ],
+  "expected_changed_file": "day2_identity_audit.tf",
+  "resource_diff": {
+    "passed": true,
+    "target_resource": {
+      "file": "day2_identity_audit.tf",
+      "resource_type": "aws_iam_policy",
+      "resource_name": "wildcard_admin"
+    },
+    "expected_modified": [
+      {
+        "file": "day2_identity_audit.tf",
+        "resource_type": "aws_iam_policy",
+        "resource_name": "wildcard_admin"
+      }
+    ],
+    "actual_modified": [
+      {
+        "file": "day2_identity_audit.tf",
+        "resource_type": "aws_iam_policy",
+        "resource_name": "wildcard_admin"
+      }
+    ],
+    "unexpected_modified": [],
+    "missing_expected_modified": [],
+    "expected_added": [],
+    "actual_added": [],
+    "unexpected_added": [],
+    "missing_expected_added": [],
+    "removed_resources": [],
+    "exact_target_file_match": true
+  },
+  "terraform_commands": {
+    "format": {
+      "command": "terraform fmt -check -recursive",
+      "return_code": 0,
+      "passed": true
+    },
+    "init": {
+      "command": "terraform init -backend=false -input=false -no-color",
+      "return_code": 0,
+      "passed": true
+    },
+    "validate": {
+      "command": "terraform validate -no-color",
+      "return_code": 0,
+      "passed": true
+    }
+  }
+}

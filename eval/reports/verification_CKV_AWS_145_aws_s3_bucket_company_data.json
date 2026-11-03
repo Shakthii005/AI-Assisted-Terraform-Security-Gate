@@ -1,0 +1,88 @@
+{
+  "project": "AI-Assisted Terraform Security Gate",
+  "timestamp_utc": "2026-11-03T06:52:19.990091+00:00",
+  "check_id": "CKV_AWS_145",
+  "resource": "aws_s3_bucket.company_data",
+  "workspace": "D:\\LEARNING\\AI-Assisted Terraform Security Gate\\eval\\work\\s3_encryption_trial",
+  "proposal_path": "D:\\LEARNING\\AI-Assisted Terraform Security Gate\\eval\\proposals\\CKV_AWS_145_s3_encryption.json",
+  "status": "ACCEPTED_FOR_HUMAN_REVIEW",
+  "checks": {
+    "terraform_format": true,
+    "terraform_init": true,
+    "terraform_validate": true,
+    "checkov_scan_complete": true,
+    "target_finding_resolved": true,
+    "no_new_checkov_findings": true,
+    "terraform_file_scope": true,
+    "terraform_resource_scope": true,
+    "terraform_change_scope": true
+  },
+  "baseline": {
+    "failed_findings": 66,
+    "unique_finding_keys": 66
+  },
+  "patched": {
+    "failed_findings": 65,
+    "unique_finding_keys": 65
+  },
+  "resolved_findings": [
+    {
+      "check_id": "CKV_AWS_145",
+      "resource": "aws_s3_bucket.company_data",
+      "file_path": "day2_s3_network.tf"
+    }
+  ],
+  "new_findings": [],
+  "target_finding_resolved": true,
+  "changed_terraform_files": [
+    "day2_s3_network.tf"
+  ],
+  "expected_changed_file": "day2_s3_network.tf",
+  "resource_diff": {
+    "passed": true,
+    "target_resource": {
+      "file": "day2_s3_network.tf",
+      "resource_type": "aws_s3_bucket",
+      "resource_name": "company_data"
+    },
+    "expected_modified": [],
+    "actual_modified": [],
+    "unexpected_modified": [],
+    "missing_expected_modified": [],
+    "expected_added": [
+      {
+        "file": "day2_s3_network.tf",
+        "resource_type": "aws_s3_bucket_server_side_encryption_configuration",
+        "resource_name": "company_data"
+      }
+    ],
+    "actual_added": [
+      {
+        "file": "day2_s3_network.tf",
+        "resource_type": "aws_s3_bucket_server_side_encryption_configuration",
+        "resource_name": "company_data"
+      }
+    ],
+    "unexpected_added": [],
+    "missing_expected_added": [],
+    "removed_resources": [],
+    "exact_target_file_match": true
+  },
+  "terraform_commands": {
+    "format": {
+      "command": "terraform fmt -check -recursive",
+      "return_code": 0,
+      "passed": true
+    },
+    "init": {
+      "command": "terraform init -backend=false -input=false -no-color",
+      "return_code": 0,
+      "passed": true
+    },
+    "validate": {
+      "command": "terraform validate -no-color",
+      "return_code": 0,
+      "passed": true
+    }
+  }
+}

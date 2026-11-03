@@ -309,14 +309,15 @@ def apply_proposal_to_copy(
 
         if additional_blocks:
 
-            patched_text += "\n\n"
-
-            patched_text += "\n\n".join(
-                block.strip()
-                for block in additional_blocks
-            )
-
-            patched_text += "\n"
+            patched_text = (
+                patched_text.rstrip("\r\n")
+                + "\n\n"
+                + "\n\n".join(
+                    block.strip()
+                    for block in additional_blocks
+             )
+             + "\n"
+         )
 
         copied_file.write_text(
             patched_text,
