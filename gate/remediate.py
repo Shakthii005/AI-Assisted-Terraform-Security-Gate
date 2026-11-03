@@ -2,7 +2,7 @@
 """
 Generic AI Terraform remediation proposal generator.
 
-Day 4: AI-Assisted Terraform Security Gate
+Day 4–6: AI-Assisted Terraform Security Gate
 
 The model proposes changes only.
 Original infrastructure is never modified.
@@ -20,7 +20,12 @@ from gate.extract import extract_resource
 from gate.prompts import build_remediation_prompt
 from gate.llm import call_model
 from gate.redaction import redact_sensitive_assignments
+from gate.output_guard import validate_ai_output
 
+
+# ============================================================
+# PROJECT CONFIGURATION
+# ============================================================
 
 ROOT = Path(__file__).resolve().parents[1]
 
@@ -59,7 +64,7 @@ Inside metadata_options, set:
 
 http_tokens = "required"
 
-This requires IMDSv2 tokens and disables IMDSv1.
+This requires IMDSv2 tokens.
 
 Preserve all other EC2 settings, including AMI,
 instance type, subnet, security groups, storage settings
@@ -109,6 +114,7 @@ Preserve the existing resource identity and all unrelated
 database configuration.
 
 IMPORTANT:
+
 The password value has been replaced by a redaction token.
 
 Preserve the exact password placeholder, including
@@ -146,7 +152,7 @@ Requirements:
 5. Allow access only to the specified S3 object ARN pattern.
 6. Do not introduce wildcard actions.
 7. Do not use Resource = "*".
-8. Do not add any additional IAM permissions.
+8. Do not add additional IAM permissions.
 9. Do not add additional Terraform resources.
 
 Return the complete corrected IAM policy resource.
@@ -155,7 +161,7 @@ Return the complete corrected IAM policy resource.
 
 
 # ============================================================
-# PROPOSAL VALIDATION
+# CHECKOV-SPECIFIC PROPOSAL VALIDATION
 # ============================================================
 
 def validate_proposal(
@@ -164,54 +170,49 @@ def validate_proposal(
     proposal: dict[str, Any],
 ) -> None:
     """
-    Perform preliminary structural and security checks
-    before an AI proposal is saved.
+    Apply experiment-specific security requirements.
+
+    Generic validation is handled by output_guard.py.
     """
 
     if not isinstance(proposal, dict):
-        raise ValueError("AI proposal must be a JSON object")
+        raise ValueError(
+            "AI proposal must be a JSON object"
+        )
 
-    patched_block = proposal.get("patched_block")
-    additional_blocks = proposal.get("additional_blocks")
-    explanation = proposal.get("explanation")
+    patched_block = proposal["patched_block"]
+    additional_blocks = proposal["additional_blocks"]
 
-    if not isinstance(patched_block, str) or not patched_block.strip():
-        raise ValueError("patched_block is missing or empty")
+    # --------------------------------------------------------
+    # Verify target resource identity.
+    # --------------------------------------------------------
 
-    if not isinstance(additional_blocks, list):
-        raise ValueError("additional_blocks must be a list")
-
-    if not all(
-        isinstance(block, str) and block.strip()
-        for block in additional_blocks
-    ):
-        raise ValueError("Invalid additional Terraform block")
-
-    if not isinstance(explanation, str) or not explanation.strip():
-        raise ValueError("AI explanation is missing")
-
-    # Check that the resource identity remains unchanged.
     parts = finding.resource.split(".")
 
     if len(parts) < 2:
-        raise ValueError("Unsupported Terraform resource address")
+        raise ValueError(
+            "Unsupported Terraform resource address"
+        )
 
     expected_header = (
         f'resource "{parts[-2]}" "{parts[-1]}"'
     )
 
-    if not re.search(re.escape(expected_header), patched_block):
+    if expected_header not in patched_block:
         raise ValueError(
-            "AI proposal changed or omitted the target resource identity"
+            "AI proposal changed or omitted the target resource"
         )
 
     # --------------------------------------------------------
-    # CKV_AWS_24: SSH remediation
+    # CKV_AWS_24: SSH remediation.
     # --------------------------------------------------------
 
     if finding.check_id == "CKV_AWS_24":
 
-        if re.search(r"\bingress\s*\{", patched_block):
+        if re.search(
+            r"\bingress\s*\{",
+            patched_block,
+        ):
             raise ValueError(
                 "SSH remediation still contains an ingress block"
             )
@@ -227,7 +228,7 @@ def validate_proposal(
             )
 
     # --------------------------------------------------------
-    # CKV_AWS_79: EC2 IMDSv2 remediation
+    # CKV_AWS_79: EC2 IMDSv2 remediation.
     # --------------------------------------------------------
 
     elif finding.check_id == "CKV_AWS_79":
@@ -246,12 +247,16 @@ def validate_proposal(
             )
 
     # --------------------------------------------------------
-    # CKV_AWS_145: S3 KMS encryption
+    # CKV_AWS_145: S3 KMS encryption.
     # --------------------------------------------------------
 
     elif finding.check_id == "CKV_AWS_145":
 
-        if patched_block.strip() != extracted.resource_block.strip():
+        # Existing S3 bucket must remain unchanged.
+        if (
+            patched_block.strip()
+            != extracted.resource_block.strip()
+        ):
             raise ValueError(
                 "Original S3 bucket resource was unexpectedly modified"
             )
@@ -274,7 +279,7 @@ def validate_proposal(
             )
 
         if not re.search(
-            r'bucket\s*=\s*aws_s3_bucket\.company_data\.id\b',
+            r'\bbucket\s*=\s*aws_s3_bucket\.company_data\.id\b',
             block,
         ):
             raise ValueError(
@@ -295,7 +300,7 @@ def validate_proposal(
             )
 
     # --------------------------------------------------------
-    # CKV_AWS_17: RDS public accessibility
+    # CKV_AWS_17: RDS public accessibility.
     # --------------------------------------------------------
 
     elif finding.check_id == "CKV_AWS_17":
@@ -313,7 +318,7 @@ def validate_proposal(
                 "Unexpected additional resources for RDS remediation"
             )
 
-        # Check that the original sensitive values were redacted.
+        # Ensure original secret placeholders are preserved.
         redacted_original = redact_sensitive_assignments(
             extracted.resource_block
         )
@@ -323,21 +328,20 @@ def validate_proposal(
             redacted_original,
         )
 
-        if not original_markers:
-            raise ValueError(
-                "Expected a sensitive-value redaction marker"
-            )
+        if original_markers:
 
-        for marker in original_markers:
+            for marker in original_markers:
 
-            if patched_block.count(f'"{marker}"') != 1:
-                raise ValueError(
-                    f"AI proposal removed or changed a "
-                    f"sensitive placeholder: {marker}"
-                )
+                if patched_block.count(
+                    f'"{marker}"'
+                ) != 1:
+                    raise ValueError(
+                        "AI proposal removed or changed a "
+                        "sensitive placeholder"
+                    )
 
     # --------------------------------------------------------
-    # CKV_AWS_62: IAM least-privilege remediation
+    # CKV_AWS_62: IAM least privilege.
     # --------------------------------------------------------
 
     elif finding.check_id == "CKV_AWS_62":
@@ -346,7 +350,7 @@ def validate_proposal(
         action_assignments = re.findall(
             r'\bAction\s*=\s*(\[[^\]]*\]|"[^"]*")',
             patched_block,
-            re.DOTALL,
+            re.IGNORECASE | re.DOTALL,
         )
 
         if len(action_assignments) != 1:
@@ -370,7 +374,7 @@ def validate_proposal(
         resource_assignments = re.findall(
             r'\bResource\s*=\s*(\[[^\]]*\]|"[^"]*")',
             patched_block,
-            re.DOTALL,
+            re.IGNORECASE | re.DOTALL,
         )
 
         if len(resource_assignments) != 1:
@@ -384,7 +388,9 @@ def validate_proposal(
             resource_assignments[0],
         )
 
-        expected_arn = "arn:aws:s3:::company-internal-data/*"
+        expected_arn = (
+            "arn:aws:s3:::company-internal-data/*"
+        )
 
         if resource_value != expected_arn:
             raise ValueError(
@@ -407,6 +413,7 @@ def validate_proposal(
 # ============================================================
 
 def main() -> None:
+    """Generate and validate an AI remediation proposal."""
 
     parser = argparse.ArgumentParser(
         description="Generate AI Terraform remediation proposals."
@@ -434,8 +441,13 @@ def main() -> None:
 
     try:
 
+        # ----------------------------------------------------
         # 1. Load approved remediation guidance.
-        guidance = REMEDIATION_INSTRUCTIONS.get(args.check_id)
+        # ----------------------------------------------------
+
+        guidance = REMEDIATION_INSTRUCTIONS.get(
+            args.check_id
+        )
 
         if guidance is None:
             raise ValueError(
@@ -443,19 +455,27 @@ def main() -> None:
                 f"{args.check_id}"
             )
 
-        # 2. Load original Checkov baseline.
-        if not BASELINE.exists():
+        # ----------------------------------------------------
+        # 2. Load the original Checkov baseline.
+        # ----------------------------------------------------
+
+        if not BASELINE.is_file():
             raise FileNotFoundError(
                 f"Baseline not found: {BASELINE}"
             )
 
         report = json.loads(
-            BASELINE.read_text(encoding="utf-8-sig")
+            BASELINE.read_text(
+                encoding="utf-8-sig"
+            )
         )
 
         findings = parse_checkov_report(report)
 
-        # 3. Select the exact finding and resource.
+        # ----------------------------------------------------
+        # 3. Select the exact finding.
+        # ----------------------------------------------------
+
         matches = [
             item
             for item in findings
@@ -471,14 +491,20 @@ def main() -> None:
 
         finding = matches[0]
 
-        # 4. Extract the Terraform resource.
+        # ----------------------------------------------------
+        # 4. Extract the original Terraform resource.
+        # ----------------------------------------------------
+
         extracted = extract_resource(
             finding,
             INFRA,
             context_lines=3,
         )
 
-        # 5. Build the remediation prompt.
+        # ----------------------------------------------------
+        # 5. Build the AI prompt.
+        # ----------------------------------------------------
+
         system_prompt, user_prompt = build_remediation_prompt(
             finding,
             extracted,
@@ -493,21 +519,39 @@ def main() -> None:
         print(f"Resource: {finding.resource}")
         print("Sending selected resource to Groq...")
 
+        # ----------------------------------------------------
         # 6. Request the AI proposal.
+        # ----------------------------------------------------
+
         proposal = call_model(
             system=system_prompt,
             user=user_prompt,
             temperature=0.2,
         )
 
-        # 7. Validate the AI proposal.
+        # ----------------------------------------------------
+        # 7. Generic security validation.
+        # ----------------------------------------------------
+
+        validate_ai_output(
+            proposal,
+            extracted.resource_block,
+        )
+
+        # ----------------------------------------------------
+        # 8. Checkov-specific validation.
+        # ----------------------------------------------------
+
         validate_proposal(
             finding,
             extracted,
             proposal,
         )
 
-        # 8. Resolve output path.
+        # ----------------------------------------------------
+        # 9. Resolve and secure the output path.
+        # ----------------------------------------------------
+
         output_path = Path(args.output)
 
         if not output_path.is_absolute():
@@ -520,18 +564,23 @@ def main() -> None:
         ).resolve()
 
         try:
-            output_path.relative_to(proposals_dir)
+            output_path.relative_to(
+                proposals_dir
+            )
 
         except ValueError as exc:
             raise ValueError(
                 "Proposal output must be inside eval/proposals/"
             ) from exc
 
-        # 9. Save the proposal separately.
         output_path.parent.mkdir(
             parents=True,
             exist_ok=True,
         )
+
+        # ----------------------------------------------------
+        # 10. Save only after validation succeeds.
+        # ----------------------------------------------------
 
         saved_data = {
             "check_id": finding.check_id,
@@ -544,17 +593,24 @@ def main() -> None:
         }
 
         output_path.write_text(
-            json.dumps(saved_data, indent=2),
+            json.dumps(
+                saved_data,
+                indent=2,
+            ),
             encoding="utf-8",
         )
 
-        # 10. Display result.
+        # ----------------------------------------------------
+        # 11. Display the proposal.
+        # ----------------------------------------------------
+
         print("\nAI REMEDIATION PROPOSAL")
         print("=" * 55)
 
         print(proposal["patched_block"])
 
         if proposal["additional_blocks"]:
+
             print("\nAdditional Terraform resources:")
 
             for block in proposal["additional_blocks"]:
@@ -569,6 +625,7 @@ def main() -> None:
 
     except (
         ValueError,
+        TypeError,
         RuntimeError,
         FileNotFoundError,
         OSError,
