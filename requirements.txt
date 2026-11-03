@@ -1,0 +1,5 @@
+
+groq==1.7.0
+python-dotenv==1.2.4
+checkov==3.4.0
+packaging==23.2

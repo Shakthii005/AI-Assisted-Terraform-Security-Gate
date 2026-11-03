@@ -1,0 +1,171 @@
+
+name: Terraform Security Gate
+
+# ==========================================================
+# WHEN SHOULD THE PIPELINE RUN?
+# ==========================================================
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'infra/**'
+      - 'gate/**'
+      - 'tests/**'
+      - 'requirements*.txt'
+      - '.github/workflows/**'
+      - 'eval/baseline.json'
+
+  pull_request:
+    branches:
+      - main
+    paths:
+      - 'infra/**'
+      - 'gate/**'
+      - 'tests/**'
+      - 'requirements*.txt'
+      - '.github/workflows/**'
+      - 'eval/baseline.json'
+
+  workflow_dispatch:
+
+# ==========================================================
+# MINIMUM REQUIRED PERMISSIONS
+# ==========================================================
+
+permissions:
+  contents: read
+
+# ==========================================================
+# CANCEL OUTDATED RUNS
+# ==========================================================
+
+concurrency:
+  group: terraform-security-gate-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+# ==========================================================
+# JOBS
+# ==========================================================
+
+jobs:
+
+  # --------------------------------------------------------
+  # JOB 1: PYTHON AUTOMATED TESTS
+  # --------------------------------------------------------
+
+  python-tests:
+
+    name: Python Security Tests
+
+    runs-on: ubuntu-latest
+
+    timeout-minutes: 20
+
+    steps:
+
+      - name: Checkout repository
+        uses: actions/checkout@v7.0.1
+
+      - name: Set up Python
+        uses: actions/setup-python@v7.0.0
+        with:
+          python-version: "3.13.12"
+          cache: pip
+          cache-dependency-path: requirements-dev.txt
+
+      - name: Upgrade pip
+        run: python -m pip install --upgrade pip
+
+      - name: Install project dependencies
+        run: python -m pip install -r requirements-dev.txt
+
+      - name: Run complete test suite
+        run: python -m pytest tests/ -v
+
+
+  # --------------------------------------------------------
+  # JOB 2: TERRAFORM FORMATTING AND VALIDATION
+  # --------------------------------------------------------
+
+  terraform-validation:
+
+    name: Terraform Validation
+
+    runs-on: ubuntu-latest
+
+    timeout-minutes: 20
+
+    steps:
+
+      - name: Checkout repository
+        uses: actions/checkout@v7.0.1
+
+      - name: Install Terraform
+        uses: hashicorp/setup-terraform@v4.0.1
+        with:
+          terraform_version: "1.17.1"
+          terraform_wrapper: false
+
+      - name: Display Terraform version
+        run: terraform version
+
+      - name: Check Terraform formatting
+        run: terraform -chdir=infra fmt -check -recursive
+
+      - name: Initialize Terraform
+        run: terraform -chdir=infra init -backend=false -input=false
+
+      - name: Validate Terraform configuration
+        run: terraform -chdir=infra validate -no-color
+
+
+  # --------------------------------------------------------
+  # JOB 3: CHECKOV SECURITY SCAN
+  # --------------------------------------------------------
+
+  checkov-scan:
+
+    name: Checkov Infrastructure Scan
+
+    runs-on: ubuntu-latest
+
+    timeout-minutes: 25
+
+    steps:
+
+      - name: Checkout repository
+        uses: actions/checkout@v7.0.1
+
+      - name: Set up Python
+        uses: actions/setup-python@v7.0.0
+        with:
+          python-version: "3.13.12"
+
+      - name: Install Checkov
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install checkov==3.4.0
+
+      - name: Prepare report directory
+        run: mkdir -p eval/reports
+
+      - name: Run Checkov security scan
+        run: |
+          checkov \
+            -d infra \
+            --framework terraform \
+            -o cli \
+            -o json \
+            --output-file-path console,eval/reports/checkov-ci.json \
+            --soft-fail
+
+      - name: Upload Checkov report
+        if: always()
+        uses: actions/upload-artifact@v7.0.2
+        with:
+          name: checkov-security-report
+          path: eval/reports/checkov-ci.json
+          if-no-files-found: warn
+          retention-days: 14
