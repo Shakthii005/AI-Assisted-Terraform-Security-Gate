@@ -24,3 +24,10 @@ __pycache__/
 .env.*
 # Temporary AI remediation workspaces
 eval/work/
+# Local Checkov CI reports and downloaded artifacts
+/checkov-security-report.zip
+/checkov-security-report/
+/eval/reports/checkov-ci*.json
+# Local baseline gate reports
+/eval/reports/baseline-gate*.json
+/eval/reports/trusted-baseline.json

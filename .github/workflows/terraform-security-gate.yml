@@ -1,10 +1,6 @@
 
 name: Terraform Security Gate
 
-# ==========================================================
-# WHEN SHOULD THE PIPELINE RUN?
-# ==========================================================
-
 on:
   push:
     branches:
@@ -16,18 +12,10 @@ on:
       - 'requirements*.txt'
       - '.github/workflows/**'
       - 'eval/baseline.json'
-# Verify automated CI execution on pull requests.
 
   pull_request:
     branches:
       - main
-    paths:
-      - 'infra/**'
-      - 'gate/**'
-      - 'tests/**'
-      - 'requirements*.txt'
-      - '.github/workflows/**'
-      - 'eval/baseline.json'
 
   workflow_dispatch:
 
@@ -138,6 +126,8 @@ jobs:
 
       - name: Checkout repository
         uses: actions/checkout@v7.0.1
+        with:
+          fetch-depth: 0
 
       - name: Set up Python
         uses: actions/setup-python@v7.0.0
@@ -162,11 +152,35 @@ jobs:
             --output-file-path console,eval/reports/checkov-ci.json \
             --soft-fail
 
+      - name: Select trusted security baseline
+        shell: bash
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+          PR_BASE_SHA: ${{ github.event.pull_request.base.sha }}
+        run: |
+          if [ "$EVENT_NAME" = "pull_request" ]; then
+            echo "Using baseline from target branch."
+            git show "${PR_BASE_SHA}:eval/baseline.json" > eval/reports/trusted-baseline.json
+          else
+            echo "Using baseline from checked-out commit."
+            cp eval/baseline.json eval/reports/trusted-baseline.json
+          fi
+
+      - name: Enforce approved Checkov baseline
+        run: |
+          python -m gate.baseline_gate \
+            --baseline eval/reports/trusted-baseline.json \
+            --current eval/reports/checkov-ci.json \
+            --output eval/reports/baseline-gate.json
+
       - name: Upload Checkov report
         if: always()
         uses: actions/upload-artifact@v7.0.2
         with:
           name: checkov-security-report
-          path: eval/reports/checkov-ci.json
+          path: |
+            eval/reports/checkov-ci.json
+            eval/reports/trusted-baseline.json
+            eval/reports/baseline-gate.json
           if-no-files-found: warn
           retention-days: 14

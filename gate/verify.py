@@ -14,7 +14,10 @@ import argparse
 import json
 import re
 import subprocess
-
+from gate.finding_identity import (
+    finding_key,
+    normalize_file_path,
+)
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
@@ -80,37 +83,6 @@ def run_terraform(
     }
 
 
-# ============================================================
-# CHECKOV FINDING IDENTIFICATION
-# ============================================================
-
-def normalize_file_path(file_path: str) -> str:
-    """Normalize Checkov paths for cross-workspace comparisons."""
-
-    normalized = str(file_path or "").replace("\\", "/")
-
-    while normalized.startswith("/"):
-        normalized = normalized[1:]
-
-    return normalized.casefold()
-
-
-def finding_key(finding) -> tuple[str, str, str]:
-    """
-    Build a stable Checkov finding identity.
-
-    Line numbers are excluded because remediation can change
-    source line positions.
-
-    File path is included to distinguish resources in
-    different Terraform files.
-    """
-
-    return (
-        finding.check_id,
-        finding.resource,
-        normalize_file_path(finding.file_path),
-    )
 
 
 def verify_target_finding(
