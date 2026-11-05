@@ -280,36 +280,69 @@ The protected `main` branch requires successful status checks and pull-request-b
 
 The implemented workflow provides automated CI verification. Automated pull-request remediation comments and production deployment are not currently implemented.
 
+### CI Scope Clarification
+
+GitHub Actions currently enforces automated Python tests, Terraform formatting and validation, Checkov infrastructure scanning, and baseline-aware security regression checks.
+
+AI remediation, temporary Terraform patching, and independent per-proposal verification are currently executed through local Python CLI commands. The workflow does not automatically generate AI fixes, modify pull requests, or post remediation comments.
+
+Therefore, this project currently implements a **CI security regression gate with a locally executed AI-assisted remediation engine**, rather than a fully automated AI pull-request remediation bot.
+
 ## 4. Model Evaluation Architecture
 
 **File:** `gate/evaluate_models.py`
 
-The evaluation engine compares Groq and Gemini against identical remediation inputs.
+The evaluation engine compares Groq and Gemini using identical remediation prompts for five predefined AWS Terraform security scenarios.
 
-Five security scenarios were evaluated:
+### Models
 
-1. SSH access security.
-2. EC2 IMDSv2 enforcement.
-3. S3 KMS encryption.
-4. RDS public accessibility.
-5. IAM least-privilege permissions.
+- Groq: `openai/gpt-oss-120b`
+- Google Gemini: `gemini-3.6-flash`
 
-The evaluator records:
+### Evaluated scenarios
+
+1. SSH access security — CKV_AWS_24.
+2. EC2 IMDSv2 enforcement — CKV_AWS_79.
+3. S3 KMS encryption — CKV_AWS_145.
+4. RDS public accessibility — CKV_AWS_17.
+5. IAM least-privilege permissions — CKV_AWS_62.
+
+### Recorded metrics
 
 - Model and provider identifier.
 - Prompt SHA-256 fingerprint.
 - Generation latency.
 - Proposal validation result.
 - Terraform verification result.
-- Checkov findings resolved.
-- Newly introduced Checkov findings.
+- Checkov finding identities resolved.
+- Newly introduced Checkov finding identities.
 - Final acceptance decision.
 
-The Day 9 experiment successfully verified nine proposals out of ten attempts. One Gemini RDS generation request failed due to HTTP 503 service unavailability.
+### Evaluation outcome
 
-The evaluation results are saved under:
+Ten model requests were attempted. Nine remediation proposals were successfully generated and all nine passed the project's independent verification pipeline.
+
+Gemini experienced one HTTP 503 service availability failure during the RDS scenario. No Terraform verification was performed for that failed generation.
+
+The evaluation used prescriptive remediation prompts and experiment-specific validation rules. The results demonstrate successful verification on the predefined scenarios, not universal AI remediation capability.
+
+### Evidence locations
+
+**Published, sanitized evidence:**
+
+`eval/compliance-evidence/model-comparison/`
+
+This directory contains the committed verification records, Gemini generation-failure record and latency measurements.
+
+**Local raw evaluation reports:**
 
 `eval/reports/model-comparison/`
+
+Raw reports are retained locally and excluded from Git to avoid publishing unnecessary source context, local paths and other internal evaluation details.
+
+The published compliance evidence register is:
+
+`eval/compliance-evidence/control-mapping.csv`
 
 ## 5. Repository Structure
 
@@ -320,8 +353,10 @@ AI-Assisted Terraform Security Gate/
 │   └── workflows/
 │       └── terraform-security-gate.yml
 │
+├── .gitleaks.toml
+│
 ├── infra/
-│   └── Vulnerable Terraform configurations
+│   └── Deliberately vulnerable Terraform configurations
 │
 ├── gate/
 │   ├── scanner.py
@@ -341,25 +376,34 @@ AI-Assisted Terraform Security Gate/
 │   └── evaluate_models.py
 │
 ├── tests/
-│   └── Unit and integration tests
+│   └── Python unit and integration tests
 │
 ├── eval/
 │   ├── baseline.json
-│   ├── proposals/
-│   ├── work/
-│   └── reports/
+│   ├── proposals/                 # Local generated proposals
+│   ├── work/                      # Temporary Terraform workspaces
+│   ├── reports/                   # Local raw evaluation reports
+│   └── compliance-evidence/
+│       ├── control-mapping.csv
+│       └── model-comparison/
+│           ├── groq/
+│           ├── gemini/
+│           └── latency-summary.csv
 │
 ├── docs/
-│   ├── day9-model-comparison.md
+│   ├── architecture.md
 │   ├── compliance-mapping.md
-│   ├── threat-model.md
-│   └── architecture.md
+│   ├── model-comparison.md
+│   └── threat-model.md
 │
+├── README.md
+├── LICENSE
 ├── requirements.txt
 ├── requirements-dev.txt
-├── .gitignore
-└── README.md
+└── .gitignore
 ```
+
+**Repository note:** `eval/reports/`, `eval/work/` and generated proposal directories contain local evaluation artifacts. The sanitized compliance evidence under `eval/compliance-evidence/` is the publishable evidence package.
 
 ## 6. Security Design Principles
 

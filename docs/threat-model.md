@@ -3,7 +3,7 @@
 **Project:** AI-Assisted Terraform Security Gate
 **Scope:** Terraform infrastructure security scanning, AI-assisted remediation and automated verification
 **Threat model reference:** OWASP Top 10 for LLM Applications 2025
-**Status:** Prototype / Academic Security Engineering Project
+**Status:** Security automation prototype / Academic Engineering Project
 
 ---
 
@@ -11,17 +11,28 @@
 
 The AI-Assisted Terraform Security Gate uses large language models (LLMs) to propose fixes for insecure Terraform infrastructure configurations.
 
-AI-generated changes are treated as untrusted input. The system does not allow the model to execute shell commands, modify original Terraform files or deploy infrastructure.
+AI-generated changes are treated as untrusted input. The model cannot execute shell commands, directly modify original Terraform files or deploy infrastructure.
 
-Instead, every proposed remediation passes through security validation, isolated Terraform patching, Terraform validation and Checkov rescanning.
+Proposals are processed through application-side security validation, isolated Terraform patching, Terraform validation and Checkov rescanning.
 
-This architecture reduces the risk of introducing insecure infrastructure changes through AI-assisted remediation.
+The system combines AI-assisted remediation with deterministic security controls to reduce the risk of introducing insecure infrastructure changes.
 
-The system still has residual risks, particularly around prompt injection, incomplete secret detection, third-party model availability and dependency supply-chain security.
+The architecture includes:
+
+- Trusted and untrusted prompt separation.
+- Sensitive-value redaction.
+- AI output validation.
+- Isolated Terraform workspaces.
+- Independent Terraform and Checkov verification.
+- Resource-level and file-level change validation.
+- Baseline-aware security enforcement.
+- Protected GitHub branches and automated CI checks.
+
+The system retains residual risks, including prompt injection, incomplete secret detection, dependency supply-chain compromise and external AI provider availability.
+
+This project is a security automation prototype, not a production cloud deployment or formal compliance platform.
 
 ## 2. System Assets
-
-The following assets require protection:
 
 | Asset | Security importance |
 |---|---|
@@ -30,8 +41,8 @@ The following assets require protection:
 | `.env` configuration | Protect Groq and Gemini API keys |
 | AI remediation prompts | Preserve trusted instructions |
 | AI-generated proposals | Prevent unsafe Terraform changes |
-| Approved Checkov baseline | Prevent security regression from being hidden |
-| Verification reports | Preserve evidence of security validation |
+| Approved Checkov baseline | Prevent security regressions from being hidden |
+| Verification reports | Preserve security validation evidence |
 | GitHub repository | Protect source code and development workflow |
 | GitHub Actions permissions | Prevent unauthorized repository modifications |
 
@@ -45,23 +56,23 @@ Terraform configurations, comments, resource names, descriptions and Checkov mes
 
 The prompt builder serializes source-derived information as JSON and separates it from trusted remediation instructions.
 
-Sensitive assignments are redacted before the request is sent to the model.
+Sensitive assignments are redacted before requests are sent to external AI providers.
 
 ### Boundary 2: AI model to Python application
 
-The AI response is considered untrusted, even when it follows the expected JSON schema.
+The AI response is considered untrusted even when it follows the expected JSON schema.
 
-The application independently checks the response structure, resource identity and security restrictions using its output validation controls.
+The application independently validates response structure, resource identity and security restrictions.
 
 ### Boundary 3: AI proposal to Terraform workspace
 
-The patcher applies an accepted proposal only to a temporary infrastructure copy.
+The patcher applies validated proposals only to temporary infrastructure copies.
 
-Original Terraform source files are never directly modified by the AI model.
+Original Terraform source files are not directly modified by the AI model.
 
 ### Boundary 4: GitHub pull request to protected main branch
 
-Changes must pass the required GitHub Actions status checks before they can be merged into the protected main branch.
+Pull requests must pass the required GitHub Actions status checks before they can be merged into the protected `main` branch.
 
 The workflow uses read-only repository permissions.
 
@@ -71,10 +82,10 @@ Potential threat actors include:
 
 - A malicious contributor submitting a pull request.
 - An attacker inserting malicious instructions into Terraform comments.
-- An attacker attempting to introduce unsafe AI-generated infrastructure changes.
+- An attacker attempting to introduce unsafe AI-generated Terraform changes.
 - A compromised third-party dependency or GitHub Action.
 - An attacker attempting to obtain API credentials.
-- An external service disruption affecting the AI provider.
+- An external service disruption affecting an AI provider.
 
 ## 5. Threat Register
 
@@ -97,19 +108,21 @@ The model could interpret this content as an instruction rather than untrusted s
 - Unsafe Terraform remediation.
 - Unrestricted network access.
 - Weakened IAM permissions.
-- Unauthorized changes to infrastructure security settings.
+- Unauthorized infrastructure configuration changes.
 
 **Implemented mitigations:**
 
 1. Trusted remediation instructions are separated from source-derived task data.
 2. Source-derived values are serialized into JSON.
 3. Untrusted task content is enclosed in explicit delimiters.
-4. The prompt instructs the model not to execute instructions contained in Terraform comments or values.
+4. The prompt instructs the model not to follow instructions contained in Terraform comments or configuration values.
 5. AI outputs pass through independent security validation.
 
 **Residual risk:**
 
-Prompt injection cannot be completely eliminated through prompt instructions alone. The current controls reduce the likelihood and impact but do not constitute a proof against every adversarial input.
+Prompt injection cannot be completely eliminated through prompt instructions alone. The current controls reduce the likelihood and potential impact but do not guarantee protection against every adversarial input.
+
+Formal adversarial testing across a broader set of prompt-injection techniques remains future work.
 
 ---
 
@@ -121,7 +134,7 @@ Prompt injection cannot be completely eliminated through prompt instructions alo
 
 Terraform source files may contain passwords, access keys, tokens or other sensitive configuration values.
 
-Sending this information directly to an external AI provider could expose confidential information.
+Sending sensitive information directly to external AI providers could expose confidential information.
 
 **Potential impact:**
 
@@ -131,20 +144,32 @@ Sending this information directly to an external AI provider could expose confid
 
 **Implemented mitigations:**
 
-1. Sensitive Terraform assignments are redacted before constructing the AI request.
+1. Sensitive Terraform assignments are redacted before constructing AI requests.
 2. Secret placeholders are preserved during remediation.
-3. Sensitive values are restored locally by the patcher.
+3. Sensitive values are restored locally by the patcher where applicable.
 4. The project `.env` file is excluded through `.gitignore`.
 5. API keys are loaded from environment configuration rather than embedded in source code.
+6. Gitleaks is used to scan selected project directories and available Git history.
+7. A narrowly scoped exception is configured for the synthetic private-key fixture in `tests/test_redaction.py`.
+
+**Observed verification:**
+
+- Selected project source, configuration, documentation and compliance-evidence paths were scanned.
+- The available 12-commit Git history was scanned.
+- No unallowlisted findings were reported in the completed scans.
+
+Gitleaks has not yet been integrated as an automated GitHub Actions job.
 
 **Residual risk:**
 
 - Secret redaction is pattern-based and is not a complete secret-detection solution.
 - Credentials in unsupported file types or unusual formats may not be detected.
+- Not every possible local or external data location has been assessed.
 - Some infrastructure metadata and configuration context is still sent to external AI providers.
 - API-provider data-handling and retention policies remain relevant.
+- Local developer environments remain sensitive.
 
-Real production credentials must not be used in demonstration experiments.
+Real production credentials must not be used in demonstration experiments. Any credential accidentally exposed through terminal output, Git history or another channel must be revoked and rotated.
 
 ---
 
@@ -168,7 +193,7 @@ The AI generates Terraform code containing unrestricted ingress, wildcard IAM pe
 1. Strict JSON response validation.
 2. AI output guard checks.
 3. Resource identity validation.
-4. Credential detection.
+4. Recognizable credential detection.
 5. Rejection of provisioners and prohibited external data sources.
 6. Rejection of dangerous wildcard IAM and public ingress patterns.
 7. Experiment-specific remediation validation.
@@ -181,6 +206,8 @@ The AI generates Terraform code containing unrestricted ingress, wildcard IAM pe
 The output guard uses text-based and pattern-based checks, not a complete security-aware HCL parser.
 
 Terraform validation confirms configuration validity but does not prove that the resulting infrastructure is secure in every runtime context.
+
+The remediation prompts are prescriptive, and some scenarios have task-specific validation rules. Successful evaluation therefore demonstrates that proposals passed the defined checks, not that models can independently discover optimal solutions for arbitrary Terraform configurations.
 
 Human review remains mandatory.
 
@@ -209,8 +236,9 @@ A compromised or manipulated model could attempt to modify source code, run comm
 2. The LLM cannot execute Terraform commands.
 3. The LLM cannot directly modify files.
 4. Its response is treated only as data.
-5. The patcher operates on a temporary copy.
+5. The patcher operates on a temporary infrastructure copy.
 6. Independent verification is required before a proposal is accepted for human review.
+7. The final decision does not authorize automatic deployment.
 
 **Residual risk:**
 
@@ -237,13 +265,15 @@ An attacker obtains Groq or Gemini API credentials from source code, Git history
 1. API keys are stored in `.env`.
 2. `.env` is excluded from Git.
 3. Model providers load credentials from environment configuration.
-4. Error messages redact the API key before displaying details.
+4. Error messages redact API keys before displaying exception details.
+5. Gitleaks scans the available Git history and selected project directories.
+6. `.env` and `.venv` were verified as ignored and not tracked by Git.
 
 **Residual risk:**
 
-Local developer environments remain sensitive. Accidentally exposed credentials must be revoked and regenerated.
+Local developer environments remain sensitive.
 
-A complete Git-history secret scan and credential hygiene review are required before public release.
+Previously exposed credentials must be revoked and regenerated. A clean current scan does not prove that a previously exposed credential remains safe or valid.
 
 ---
 
@@ -251,7 +281,7 @@ A complete Git-history secret scan and credential hygiene review are required be
 
 **Threat scenario:**
 
-A malicious workflow change or compromised action attempts to use the repository's CI permissions to modify protected files or bypass review requirements.
+A malicious workflow change or compromised action attempts to use repository CI permissions to modify protected files or bypass review requirements.
 
 **Potential impact:**
 
@@ -264,20 +294,34 @@ A malicious workflow change or compromised action attempts to use the repository
 
 1. The workflow explicitly uses `contents: read`.
 2. Branch protection requires pull requests.
-3. Required Python Security Tests must pass.
-4. Required Terraform Validation must pass.
-5. Required Checkov Infrastructure Scan must pass.
-6. Direct pushes to main are rejected by branch protection.
+3. Python Security Tests is a required status check.
+4. Terraform Validation is a required status check.
+5. Checkov Infrastructure Scan is a required status check.
+6. Direct pushes to `main` are rejected by branch protection.
+7. All seven GitHub Actions references are pinned to full 40-character commit SHAs.
+8. The three required CI checks were successfully executed on the Day 9 and Day 10 pull requests.
+
+**CI scope clarification:**
+
+GitHub Actions currently runs:
+
+- Python unit and integration tests.
+- Terraform formatting, initialization and validation.
+- Checkov infrastructure scanning.
+- Baseline-aware security regression enforcement.
+
+The AI remediation, temporary Terraform patching and independent per-proposal verification loop run locally through the Python CLI.
+
+GitHub Actions does not currently invoke AI remediation automatically, modify pull requests with generated fixes or post remediation comments.
+
+The project implements a CI security regression gate with a locally executed AI-assisted remediation engine, not a fully automated AI pull-request remediation bot.
 
 **Residual risk:**
 
-The workflow currently references GitHub Actions by version tags rather than immutable full-length commit SHAs.
-
-GitHub recommends pinning actions to full-length commit SHAs to improve supply-chain protection.
-
-Forked pull requests and untrusted workflow changes also require careful review.
-
-The workflow does not use AI provider secrets or deploy infrastructure.
+- Full SHA pinning reduces the risk of action tags being changed, but pinned revisions still require periodic security and compatibility review.
+- Forked pull requests and untrusted workflow changes require careful review.
+- Workflow-level security testing remains necessary.
+- The workflow does not use AI provider secrets or deploy infrastructure.
 
 ---
 
@@ -301,15 +345,16 @@ A malicious or compromised Python dependency or GitHub Action introduces uninten
 1. Direct Python dependencies have pinned versions.
 2. `pip check` is used to identify dependency conflicts.
 3. Unit and integration tests run through pytest.
-4. GitHub Actions versions are explicitly specified.
+4. GitHub Actions are pinned to full commit SHAs.
 5. CI runs independently on pull requests.
+6. Selected project directories and Git history are scanned with Gitleaks.
 
 **Residual risk:**
 
-- The dependency list does not provide a complete immutable lock of every transitive dependency.
-- Dependency vulnerability scanning has not yet been established.
-- GitHub Action references are not currently pinned to full commit SHAs.
+- The dependency list does not provide an immutable lock of every transitive dependency.
+- Dependency vulnerability scanning has not been established.
 - Software Bill of Materials generation has not been implemented.
+- GitHub Actions revisions require ongoing review and maintenance.
 
 ---
 
@@ -340,13 +385,14 @@ The AI provider experiences service overload, rate limiting or excessive request
 
 During the Day 9 evaluation, Gemini returned HTTP 503 UNAVAILABLE for the RDS remediation scenario.
 
-The evaluator recorded the failure without falsely reporting a verified remediation.
+The evaluator recorded the provider availability failure without falsely reporting a verified remediation.
 
 **Residual risk:**
 
-Rate limiting, per-project budget enforcement and a circuit breaker are not currently implemented.
-
-Provider availability remains an external dependency.
+- Rate limiting has not been fully implemented.
+- Per-project API budget enforcement is not implemented.
+- A circuit breaker is not implemented.
+- Provider availability remains an external dependency.
 
 ---
 
@@ -372,7 +418,9 @@ A malicious pull request modifies the approved Checkov baseline to make newly in
 
 **Residual risk:**
 
-Changes to the approved baseline still require careful human review. The baseline represents an approved technical exception set, not a declaration that existing vulnerabilities are safe.
+Changes to the approved baseline still require careful human review.
+
+The baseline represents an approved technical exception set, not a declaration that existing vulnerabilities are safe.
 
 ---
 
@@ -395,6 +443,7 @@ Developers treat an accepted AI remediation proposal as guaranteed secure and de
 3. Resource-level differences are checked.
 4. The final status is `ACCEPTED_FOR_HUMAN_REVIEW`.
 5. No automatic production deployment is performed.
+6. The evaluation documentation explicitly distinguishes verification success from general model capability.
 
 **Residual risk:**
 
@@ -416,56 +465,61 @@ Automated security checks cover only the rules and contexts they understand. A h
 | `gate/diff_guard.py` | Restricts resource-level changes |
 | `gate/verify.py` | Independently verifies Terraform and Checkov results |
 | `gate/baseline_gate.py` | Detects newly introduced security findings |
-| GitHub Actions | Automates testing and infrastructure validation |
-| Branch protection | Prevents unverified direct changes to main |
+| GitHub Actions | Automates tests, Terraform validation, Checkov scanning and baseline enforcement |
+| Branch protection | Requires approved pull-request and CI checks |
 
 ## 7. Security Verification Invariants
 
 The system follows these security principles:
 
-1. Original Terraform files must never be modified by the AI model.
+1. Original Terraform files must never be modified directly by the AI model.
 2. Sensitive values must be redacted before external model submission.
 3. AI output must never be trusted without independent validation.
 4. Terraform syntax and provider configuration must be validated.
 5. The original Checkov finding must be resolved.
 6. No new Checkov finding identities may be introduced.
 7. Changes must remain within the approved Terraform file and resource scope.
-8. Failed or incomplete security verification must not be treated as acceptance.
+8. Failed or incomplete verification must not be treated as acceptance.
 9. AI proposals must remain subject to human review.
 10. No production deployment is authorized by the AI remediation process.
 
 ## 8. Remaining Security Improvements
 
-The following improvements remain future work:
-
 | Improvement | Current status |
 |---|---|
-| Complete secret scanning across repository | Pending |
-| Gitleaks scan of Git history | Pending |
+| Gitleaks scanning of selected project directories | Completed |
+| Gitleaks scanning of available 12-commit Git history | Completed |
+| Gitleaks integration into GitHub Actions | Pending |
+| Complete secret scanning across every repository and external data location | Partial |
 | Full HCL parser for AI output validation | Pending |
-| GitHub Actions full SHA pinning | Pending |
+| GitHub Actions full SHA pinning | Completed |
+| Periodic review of pinned action revisions | Ongoing |
 | Python dependency vulnerability scanning | Pending |
-| Immutable dependency lock / SBOM | Pending |
+| Immutable transitive dependency lock | Pending |
+| Software Bill of Materials generation | Pending |
 | API usage budget and rate limiting | Pending |
 | Centralized audit logging | Pending |
 | Formal adversarial prompt-injection assessment | Partial |
 | Production AWS runtime security assessment | Not performed |
 | Automated PR remediation comments | Not implemented |
+| Automated AI remediation through GitHub Actions | Not implemented |
 | Production deployment integration | Not implemented |
 
 ## 9. Overall Risk Assessment
 
-The prototype significantly reduces the risk of allowing unvalidated AI-generated Terraform changes into the protected repository.
+The prototype reduces the risk of accepting unvalidated AI-generated Terraform changes by using multiple security validation layers.
 
-Its strongest security properties are:
+Its strongest implemented security properties are:
 
 - Separation of trusted instructions and untrusted input.
-- Local secret redaction.
+- Sensitive-value redaction.
 - No AI shell or deployment access.
 - Isolated Terraform patching.
 - Independent Terraform and Checkov verification.
 - Resource-level change restrictions.
 - Baseline-aware security enforcement.
+- Gitleaks scanning of selected project paths and available Git history.
+- GitHub Actions pinned to full commit SHAs.
 - Protected GitHub branch and required CI checks.
 
 However, the system is not a fully production-hardened cloud compliance or deployment platform.
@@ -489,12 +543,17 @@ It should be treated as an infrastructure security automation prototype requirin
 5. GitHub Security Guidance:
    https://docs.github.com/en/code-security/tutorials/secure-your-organization/protect-against-threats
 
+6. Gitleaks:
+   https://github.com/gitleaks/gitleaks
+
 ---
 
-**Conclusion**
+## Conclusion
 
 The AI-Assisted Terraform Security Gate uses defense in depth rather than relying on AI-generated code alone.
 
-Its security architecture combines input sanitization, secret redaction, AI output validation, isolated patching, independent Terraform and Checkov verification, and protected source control.
+Its security architecture combines input sanitization, secret redaction, AI output validation, isolated patching, independent Terraform and Checkov verification, baseline-aware CI enforcement and protected source control.
 
-This approach demonstrates how AI can assist infrastructure security remediation while keeping security decisions under deterministic validation and human control.
+The system demonstrates how AI can assist predefined infrastructure security remediation tasks while keeping security decisions under deterministic validation and human control.
+
+**AI proposes. Security controls verify. Humans approve.**

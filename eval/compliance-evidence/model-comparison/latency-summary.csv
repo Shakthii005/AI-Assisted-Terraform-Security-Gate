@@ -1,0 +1,11 @@
+checkov_id,scenario,provider,model,generation_status,generation_latency_ms,verification_status,error
+CKV_AWS_24,SSH security,groq,openai/gpt-oss-120b,SUCCESS,2690.06,ACCEPTED_FOR_HUMAN_REVIEW,
+CKV_AWS_24,SSH security,gemini,gemini-3.6-flash,SUCCESS,10150.56,ACCEPTED_FOR_HUMAN_REVIEW,
+CKV_AWS_79,EC2 IMDSv2,groq,openai/gpt-oss-120b,SUCCESS,2812.15,ACCEPTED_FOR_HUMAN_REVIEW,
+CKV_AWS_79,EC2 IMDSv2,gemini,gemini-3.6-flash,SUCCESS,9493.82,ACCEPTED_FOR_HUMAN_REVIEW,
+CKV_AWS_145,S3 KMS encryption,groq,openai/gpt-oss-120b,SUCCESS,2842.26,ACCEPTED_FOR_HUMAN_REVIEW,
+CKV_AWS_145,S3 KMS encryption,gemini,gemini-3.6-flash,SUCCESS,9963.00,ACCEPTED_FOR_HUMAN_REVIEW,
+CKV_AWS_17,RDS public access,groq,openai/gpt-oss-120b,SUCCESS,2892.19,ACCEPTED_FOR_HUMAN_REVIEW,
+CKV_AWS_17,RDS public access,gemini,gemini-3.6-flash,GENERATION_FAILED,,NOT_RUN,HTTP_503_UNAVAILABLE
+CKV_AWS_62,IAM least privilege,groq,openai/gpt-oss-120b,SUCCESS,3464.47,ACCEPTED_FOR_HUMAN_REVIEW,
+CKV_AWS_62,IAM least privilege,gemini,gemini-3.6-flash,SUCCESS,10084.86,ACCEPTED_FOR_HUMAN_REVIEW,
