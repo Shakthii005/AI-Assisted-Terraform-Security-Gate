@@ -1,0 +1,64 @@
+{
+  "evidence_schema": "1.0",
+  "project": "AI-Assisted Terraform Security Gate",
+  "provider": "groq",
+  "model": "openai/gpt-oss-120b",
+  "timestamp_utc": "2026-11-05T07:46:34.176221+00:00",
+  "check_id": "CKV_AWS_145",
+  "terraform_resource": "aws_s3_bucket.company_data",
+  "status": "ACCEPTED_FOR_HUMAN_REVIEW",
+  "verification_passed": true,
+  "checks": {
+    "terraform_format": true,
+    "terraform_init": true,
+    "terraform_validate": true,
+    "checkov_scan_complete": true,
+    "target_finding_resolved": true,
+    "no_new_checkov_findings": true,
+    "terraform_file_scope": true,
+    "terraform_resource_scope": true,
+    "terraform_change_scope": true
+  },
+  "baseline": {
+    "failed_findings": 66,
+    "unique_finding_keys": 66
+  },
+  "patched": {
+    "failed_findings": 65,
+    "unique_finding_keys": 65
+  },
+  "resolved_finding_count": 1,
+  "new_finding_count": 0,
+  "changed_terraform_files": [
+    "day2_s3_network.tf"
+  ],
+  "resource_scope": {
+    "passed": true,
+    "exact_target_file_match": true,
+    "target_resource_type": "aws_s3_bucket",
+    "target_resource_name": "company_data",
+    "modified_resource_count": 0,
+    "added_resource_count": 1,
+    "unexpected_modified_count": 0,
+    "unexpected_added_count": 0,
+    "removed_resource_count": 0
+  },
+  "terraform_command_results": {
+    "format": {
+      "passed": true,
+      "return_code": 0
+    },
+    "init": {
+      "passed": true,
+      "return_code": 0
+    },
+    "validate": {
+      "passed": true,
+      "return_code": 0
+    }
+  },
+  "limitations": [
+    "Local Terraform validation only; no live AWS deployment.",
+    "Human review remains required."
+  ]
+}

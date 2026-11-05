@@ -1,0 +1,64 @@
+{
+  "evidence_schema": "1.0",
+  "project": "AI-Assisted Terraform Security Gate",
+  "provider": "gemini",
+  "model": "gemini-3.6-flash",
+  "timestamp_utc": "2026-11-05T07:53:23.457361+00:00",
+  "check_id": "CKV_AWS_62",
+  "terraform_resource": "aws_iam_policy.wildcard_admin",
+  "status": "ACCEPTED_FOR_HUMAN_REVIEW",
+  "verification_passed": true,
+  "checks": {
+    "terraform_format": true,
+    "terraform_init": true,
+    "terraform_validate": true,
+    "checkov_scan_complete": true,
+    "target_finding_resolved": true,
+    "no_new_checkov_findings": true,
+    "terraform_file_scope": true,
+    "terraform_resource_scope": true,
+    "terraform_change_scope": true
+  },
+  "baseline": {
+    "failed_findings": 66,
+    "unique_finding_keys": 66
+  },
+  "patched": {
+    "failed_findings": 57,
+    "unique_finding_keys": 57
+  },
+  "resolved_finding_count": 9,
+  "new_finding_count": 0,
+  "changed_terraform_files": [
+    "day2_identity_audit.tf"
+  ],
+  "resource_scope": {
+    "passed": true,
+    "exact_target_file_match": true,
+    "target_resource_type": "aws_iam_policy",
+    "target_resource_name": "wildcard_admin",
+    "modified_resource_count": 1,
+    "added_resource_count": 0,
+    "unexpected_modified_count": 0,
+    "unexpected_added_count": 0,
+    "removed_resource_count": 0
+  },
+  "terraform_command_results": {
+    "format": {
+      "passed": true,
+      "return_code": 0
+    },
+    "init": {
+      "passed": true,
+      "return_code": 0
+    },
+    "validate": {
+      "passed": true,
+      "return_code": 0
+    }
+  },
+  "limitations": [
+    "Local Terraform validation only; no live AWS deployment.",
+    "Human review remains required."
+  ]
+}

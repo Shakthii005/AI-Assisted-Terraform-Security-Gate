@@ -1,0 +1,14 @@
+{
+  "evidence_schema": "1.0",
+  "project": "AI-Assisted Terraform Security Gate",
+  "provider": "gemini",
+  "model": "gemini-3.6-flash",
+  "check_id": "CKV_AWS_17",
+  "terraform_resource": "aws_db_instance.company",
+  "status": "GENERATION_FAILED",
+  "failure_category": "PROVIDER_AVAILABILITY",
+  "http_status": 503,
+  "verification_performed": false,
+  "verification_status": "NOT_RUN",
+  "explanation": "Gemini returned a temporary service availability error. No remediation proposal was generated, so Terraform and Checkov verification were not performed."
+}
