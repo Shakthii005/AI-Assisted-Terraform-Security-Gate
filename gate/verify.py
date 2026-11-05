@@ -354,6 +354,7 @@ def verify_trial(
     check_id: str,
     resource: str,
     proposal_path: Path,
+    report_path: Path | None = None,
 ) -> dict[str, Any]:
     """
     Verify one AI-remediation trial.
@@ -723,7 +724,7 @@ def verify_trial(
         },
     }
 
-    # --------------------------------------------------------
+       # --------------------------------------------------------
     # 14. Save verification evidence
     # --------------------------------------------------------
 
@@ -732,21 +733,44 @@ def verify_trial(
         exist_ok=True,
     )
 
-    safe_resource = re.sub(
-        r"[^A-Za-z0-9_-]",
-        "_",
-        resource,
-    )
+    if report_path is None:
 
-    report_path = REPORT_ROOT / (
-        f"verification_{check_id}_{safe_resource}.json"
+        safe_resource = re.sub(
+            r"[^A-Za-z0-9_-]",
+            "_",
+            resource,
+        )
+
+        report_path = REPORT_ROOT / (
+            f"verification_{check_id}_{safe_resource}.json"
+        )
+
+    else:
+
+        report_path = Path(report_path)
+
+        if not report_path.is_absolute():
+            report_path = ROOT / report_path
+
+        report_path = report_path.resolve()
+
+        try:
+            report_path.relative_to(REPORT_ROOT.resolve())
+
+        except ValueError as exc:
+            raise ValueError(
+                "Verification report must be saved inside eval/reports/"
+            ) from exc
+
+    report_path.parent.mkdir(
+        parents=True,
+        exist_ok=True,
     )
 
     report_path.write_text(
         json.dumps(report, indent=2),
         encoding="utf-8",
     )
-
     # --------------------------------------------------------
     # 15. Display final report
     # --------------------------------------------------------
