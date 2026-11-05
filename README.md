@@ -8,7 +8,7 @@
 
 The AI-Assisted Terraform Security Gate is a Python-based security automation project that detects AWS infrastructure misconfigurations in Terraform code, generates AI-assisted remediation proposals, and independently verifies the proposed changes before accepting them for human review.
 
-It integrates Terraform, Checkov    , Groq and Google Gemini into a controlled security workflow.
+It integrates Terraform, Checkov, Groq and Google Gemini into a controlled security workflow.
 
 **The core principle: Never trust an AI-generated infrastructure change without independent security verification.**
 
@@ -465,7 +465,6 @@ All accepted proposals require human review before any real infrastructure chang
 
 - Integrate a full HCL parser for semantic validation.
 - Add repository-wide secret scanning and Gitleaks enforcement.
-- Pin GitHub Actions to immutable full-length commit SHAs.
 - Generate a software bill of materials.
 - Add dependency vulnerability scanning.
 - Implement automated pull-request security comments.
