@@ -4,7 +4,7 @@
 
 Compare Groq GPT-OSS 120B and Google Gemini 3.6 Flash across five predefined AWS Terraform security remediation scenarios.
 
-Both models received identical remediation prompts for each paired experiment. Prompt SHA-256 fingerprints were compared to confirm input equivalence.
+Both models received identical remediation prompts for each paired experiment.
 
 The objective was to evaluate whether AI-generated Terraform remediation proposals could pass independent security verification, while recording model generation latency and provider availability.
 
@@ -112,4 +112,81 @@ The provider's response indicated temporary service overload.
 As a result:
 
 - No Gemini remediation proposal was generated.
-- Terraform verification was not performed for that
+- Terraform verification was not performed for that attempt.
+- No Gemini remediation proposal was generated.
+- Terraform verification was not performed for that attempt.
+- Checkov verification was not performed for that attempt.
+- The result was classified as a provider availability failure, not a rejected security remediation.
+
+## 7. Important Experimental Limitations
+
+The results must be interpreted within the scope of the experiment.
+
+1. Only five predefined Terraform security scenarios were evaluated.
+2. Each scenario was executed once per provider.
+3. The remediation prompts were prescriptive and included task-specific security requirements.
+4. Individual security checks used experiment-specific validation rules.
+5. Groq used temperature 0.2, while Gemini was called without an explicit temperature setting.
+6. Provider availability affected Gemini's generation success rate.
+7. Terraform and Checkov verification of individual AI proposals was performed locally.
+8. No live AWS deployment or runtime security assessment was conducted.
+9. `ACCEPTED_FOR_HUMAN_REVIEW` does not establish that a proposal is production-ready.
+
+An important distinction is that the 100% acceptance rate among successfully generated proposals demonstrates that the verification pipeline accepted the proposed changes for these predefined scenarios.
+
+It does not establish that either model can independently discover optimal security configurations or safely remediate arbitrary Terraform infrastructure.
+
+The highly prescriptive prompts and task-specific validators constrain the remediation space. Broader testing with less prescriptive prompts, more complex infrastructure and repeated trials would be needed to evaluate general model remediation capability.
+
+## 8. Interpretation
+
+**Groq GPT-OSS 120B**
+
+Groq successfully generated all five proposals and achieved a 100% acceptance rate among generated proposals. It also recorded lower generation latency in these experiments.
+
+**Google Gemini 3.6 Flash**
+
+Gemini generated four proposals, and all four passed independent verification. Its fifth request failed because of provider service unavailability.
+
+**Comparative conclusion**
+
+Both models produced proposals that passed the project's defined security verification requirements whenever generation succeeded.
+
+Groq demonstrated higher observed generation availability and lower latency in this experiment. Gemini achieved equivalent verification outcomes across its four successfully generated proposals.
+
+These results should not be interpreted as proof of universal model superiority.
+
+## 9. Evidence and Reproducibility
+
+Sanitized verification evidence is committed under:
+
+`eval/compliance-evidence/model-comparison/`
+
+The directory contains:
+
+- Groq verification reports.
+- Gemini verification reports.
+- Gemini RDS generation-failure evidence.
+- Recorded latency measurements.
+
+The aggregate model evaluation measurements are available in:
+
+`eval/compliance-evidence/model-comparison/latency-summary.csv`
+
+The compliance evidence register is available in:
+
+`eval/compliance-evidence/control-mapping.csv`
+
+The original detailed evaluation reports remain in the locally generated and Git-ignored evaluation workspace.
+
+## 10. Conclusion
+
+This experiment demonstrates a controlled approach to evaluating AI-generated Terraform security remediation.
+
+Rather than relying on the model's explanation or confidence, every generated proposal was subjected to independent application-side validation, Terraform checks, Checkov rescanning and resource-level change verification.
+
+The results show that AI can assist with predefined infrastructure security remediation tasks when its outputs are constrained and independently verified.
+
+The main contribution is not simply the use of multiple AI models. It is the security verification architecture that evaluates their proposed infrastructure changes before accepting them for human review.
+
+**AI proposes. Deterministic security controls verify. Humans approve.**
