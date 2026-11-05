@@ -113,8 +113,6 @@ As a result:
 
 - No Gemini remediation proposal was generated.
 - Terraform verification was not performed for that attempt.
-- No Gemini remediation proposal was generated.
-- Terraform verification was not performed for that attempt.
 - Checkov verification was not performed for that attempt.
 - The result was classified as a provider availability failure, not a rejected security remediation.
 
