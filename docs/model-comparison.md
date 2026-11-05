@@ -1,46 +1,57 @@
-
 # Day 9 — AI Remediation Model Comparison
 
-## Objective
+## 1. Objective
 
-Compare Groq GPT-OSS 120B and Google Gemini 3.6 Flash on five Terraform security remediation scenarios.
+Compare Groq GPT-OSS 120B and Google Gemini 3.6 Flash across five predefined AWS Terraform security remediation scenarios.
 
-Both models received identical remediation prompts for each paired experiment.
+Both models received identical remediation prompts for each paired experiment. Prompt SHA-256 fingerprints were compared to confirm input equivalence.
 
-## Evaluation methodology
+The objective was to evaluate whether AI-generated Terraform remediation proposals could pass independent security verification, while recording model generation latency and provider availability.
 
-Each successful proposal passed through the same security pipeline:
-
-1. AI output structure validation.
-2. AI output safety guard.
-3. Checkov-specific remediation validation.
-4. Isolated Terraform workspace patching.
-5. Terraform formatting.
-6. Terraform initialization and validation.
-7. Full Checkov scan.
-8. Target finding resolution.
-9. Resource-level and file-level change verification.
-
-Original Terraform infrastructure was not modified.
-
-## Models
+## 2. Models Evaluated
 
 | Provider | Model |
 |---|---|
-| Groq | openai/gpt-oss-120b |
-| Google | gemini-3.6-flash |
+| Groq | `openai/gpt-oss-120b` |
+| Google | `gemini-3.6-flash` |
 
-## Experiment results
+## 3. Evaluation Methodology
 
-| Security scenario | Groq | Gemini |
-|---|---|---|
-| SSH access (CKV_AWS_24) | Accepted | Accepted |
-| EC2 IMDSv2 (CKV_AWS_79) | Accepted | Accepted |
-| S3 KMS encryption (CKV_AWS_145) | Accepted | Accepted |
-| RDS public access (CKV_AWS_17) | Accepted | Generation failed — HTTP 503 |
-| IAM least privilege (CKV_AWS_62) | Accepted | Accepted |
+Each successfully generated proposal passed through the following verification pipeline:
 
-## Quantitative results
+1. AI response structure validation.
+2. AI output security guard.
+3. Checkov-specific remediation validation.
+4. Isolated Terraform workspace patching.
+5. Terraform formatting validation.
+6. Terraform initialization and validation.
+7. Full Checkov infrastructure rescan.
+8. Target security finding resolution and regression comparison.
+9. File-level and resource-level change verification.
+
+The original Terraform infrastructure was not modified. Proposed changes were applied and evaluated in isolated temporary workspaces.
+
+A proposal was accepted only when all nine verification conditions passed.
+
+The final decision was:
+
+`ACCEPTED_FOR_HUMAN_REVIEW`
+
+This status indicates successful verification within the project's defined test scenarios. It does not constitute production deployment approval.
+
+## 4. Experiment Results
+
+Five AWS security scenarios were evaluated.
+
+| Security scenario | Checkov ID | Groq | Gemini |
+|---|---|---|---|
+| Unrestricted SSH access | CKV_AWS_24 | Accepted | Accepted |
+| EC2 IMDSv2 enforcement | CKV_AWS_79 | Accepted | Accepted |
+| S3 KMS encryption | CKV_AWS_145 | Accepted | Accepted |
+| RDS public accessibility | CKV_AWS_17 | Accepted | Generation failed — HTTP 503 |
+| IAM least privilege | CKV_AWS_62 | Accepted | Accepted |
+
+### 4.1 Quantitative Results
 
 | Metric | Groq | Gemini |
 |---|---:|---:|
@@ -48,48 +59,57 @@ Original Terraform infrastructure was not modified.
 | Proposals generated | 5 | 4 |
 | Accepted proposals | 5 | 4 |
 | Generation failures | 0 | 1 |
-| Acceptance when generated | 100% | 100% |
+| Acceptance among generated proposals | 100% | 100% |
 | Generation success rate | 100% | 80% |
 | Resolved Checkov finding identities | 13 | 12 |
-| New finding identities | 0 | 0 |
-| Average generation latency | 2940.23 ms | 9923.06 ms |
+| New Checkov finding identities | 0 | 0 |
+| Average generation latency | 2,940.23 ms | 9,923.06 ms |
 
-## Latency comparison
+**Overall outcome:**
 
-For the four scenarios where both models generated proposals:
+- Ten model requests were attempted.
+- Nine remediation proposals were successfully generated.
+- All nine generated proposals passed the project's independent verification pipeline.
+- No new Checkov finding identities were introduced by the accepted proposals.
 
-- Groq average latency: approximately 2952.24 ms.
-- Gemini average latency: approximately 9923.06 ms.
-- Groq was approximately 3.36 times faster in these experiments.
+The successful verification rate is calculated only among proposals that were generated. The generation failure is reported separately.
 
-These measurements are based on single runs and are not a statistically conclusive benchmark.
+## 5. Latency Comparison
 
-## Gemini availability issue
+The following averages were calculated from the recorded generation latency measurements.
 
-Gemini returned HTTP 503 UNAVAILABLE for the RDS remediation request.
+### All successful generations
 
-Google's response indicated temporary service overload.
+| Provider | Successful requests | Average latency |
+|---|---:|---:|
+| Groq | 5 | 2,940.23 ms |
+| Gemini | 4 | 9,923.06 ms |
 
-This is classified as a provider availability failure, not a rejected security remediation.
+### Paired comparison
 
-Earlier Gemini 3.8 Flash attempts also experienced HTTP 503 errors and are excluded from the five-case comparison.
+For a direct comparison, only the four scenarios where both providers successfully generated proposals were included.
 
-## Important experimental limitations
+| Provider | Average latency |
+|---|---:|
+| Groq | 2,952.24 ms |
+| Gemini | 9,923.06 ms |
 
-- Only five security scenarios were evaluated.
-- Each scenario was run once per model.
-- Groq used temperature 0.2; Gemini used its default generation setting.
-- Provider availability affected Gemini's completion rate.
-- Terraform validation and Checkov verification were performed locally.
-- ACCEPTED_FOR_HUMAN_REVIEW does not mean production deployment approval.
-- No live AWS deployment was performed.
+Groq was approximately 3.36 times faster than Gemini across these four paired experiments.
 
-## Conclusion
+These measurements represent individual observed requests, not statistically conclusive performance benchmarks.
 
-Both models produced accepted remediations for every proposal successfully generated.
+**Raw measurement evidence:**
+[View latency-summary.csv](../eval/compliance-evidence/model-comparison/latency-summary.csv)
 
-Groq demonstrated higher generation reliability and lower latency in this experiment.
+## 6. Gemini Provider Availability Issue
 
-Gemini demonstrated equivalent security verification results on its four successfully generated proposals.
+During the RDS public-access remediation experiment (`CKV_AWS_17`), Gemini returned:
 
-The experiment demonstrates how AI-generated Terraform changes can be evaluated through independent security controls rather than relying solely on model-generated explanations.
+`HTTP 503 UNAVAILABLE`
+
+The provider's response indicated temporary service overload.
+
+As a result:
+
+- No Gemini remediation proposal was generated.
+- Terraform verification was not performed for that

@@ -8,7 +8,7 @@
 
 The AI-Assisted Terraform Security Gate is a Python-based security automation project that detects AWS infrastructure misconfigurations in Terraform code, generates AI-assisted remediation proposals, and independently verifies the proposed changes before accepting them for human review.
 
-It integrates Terraform, Checkov, Groq and Google Gemini into a controlled security workflow.
+It integrates Terraform, Checkov    , Groq and Google Gemini into a controlled security workflow.
 
 **The core principle: Never trust an AI-generated infrastructure change without independent security verification.**
 
@@ -162,7 +162,7 @@ Pull requests use the baseline from their target branch, preventing a proposed b
 
 The evaluation engine sends identical prompts to both providers and records their remediation and verification results.
 
-See [docs/day9-model-comparison.md](docs/day9-model-comparison.md).
+See [Model Evaluation](docs/model-comparison.md)
 
 ## Evaluation Results
 
@@ -204,7 +204,7 @@ These are preliminary results from five single-run scenarios, not a statisticall
 
 Evaluation evidence is preserved in:
 
-`eval/reports/model-comparison/`
+`eval/compliance-evidence/model-comparison/`
 
 ## Compliance Control Alignment
 
@@ -426,6 +426,14 @@ The Checkov job also runs baseline-aware enforcement.
 The protected `main` branch requires pull requests and successful CI status checks.
 
 The project demonstrates protected-branch CI integration. Automated AI-generated pull-request comments and production deployment are not currently implemented.
+
+### CI Scope Clarification
+
+GitHub Actions currently enforces automated Python tests, Terraform formatting and validation, Checkov infrastructure scanning, and baseline-aware security regression checks.
+
+AI remediation, temporary Terraform patching, and independent per-proposal verification are currently executed through local Python CLI commands. The workflow does not automatically generate AI fixes, modify pull requests, or post remediation comments.
+
+Therefore, this project currently implements a **CI security regression gate with a locally executed AI-assisted remediation engine**, rather than a fully automated AI pull-request remediation bot.
 
 ## Documentation
 
