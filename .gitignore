@@ -31,3 +31,8 @@ eval/work/
 # Local baseline gate reports
 /eval/reports/baseline-gate*.json
 /eval/reports/trusted-baseline.json
+
+
+# Generated multi-model evaluation artifacts
+/eval/proposals/model-comparison/
+/eval/reports/model-comparison/
