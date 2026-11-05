@@ -471,6 +471,19 @@ All accepted proposals require human review before any real infrastructure chang
 - Expand compliance mapping and AWS security control coverage.
 - Evaluate additional AI models and larger test datasets.
 - Add controlled retry and manual-remediation workflows.
+- ## 🎥 Project Demo
+
+Watch the complete project demonstration:
+
+[**▶ Watch the AI-Assisted Terraform Security Gate Demo**](https://youtu.be/h88l_7wphWo)
+
+The demonstration covers:
+- Terraform vulnerability detection using Checkov
+- AI-assisted remediation proposal generation
+- Isolated Terraform patching
+- Independent security verification
+- Groq vs Gemini model evaluation
+- GitHub Actions CI enforcement
 
 ## Author
 
