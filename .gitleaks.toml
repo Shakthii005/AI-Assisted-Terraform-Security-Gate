@@ -1,0 +1,20 @@
+title = "AI-Assisted Terraform Security Gate — Gitleaks"
+
+[extend]
+useDefault = true
+
+[[allowlists]]
+description = "Synthetic private-key fixture used by test_redaction.py"
+condition = "AND"
+
+targetRules = ["private-key"]
+
+paths = [
+  '''(^|/)tests/test_redaction\.py$'''
+]
+
+regexTarget = "match"
+
+regexes = [
+  '''example-sensitive-value'''
+]
